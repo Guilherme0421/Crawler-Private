@@ -1,7 +1,7 @@
 import threading
 import re
-import requests # type: ignore
-from bs4 import BeautifulSoup # type: ignore
+import requests
+from bs4 import BeautifulSoup
 
 dominio = "https://django-anuncios.solyd.com.br"
 urlAutomoveis = "https://django-anuncios.solyd.com.br/automoveis/"
