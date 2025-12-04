@@ -2,6 +2,7 @@ import threading
 import copy
 import re
 import requests
+from urllib.parse import urlparse, urljoin
 from users_agent import get_random_user_agent, robots_parser,filtrar_url
 from bs4 import BeautifulSoup
 
@@ -10,6 +11,7 @@ from bs4 import BeautifulSoup
 
 LINKS = []
 TELEFONES = []
+LOCK = threading.Lock()
 
 def requisicao(url, headers):
     try:
@@ -28,22 +30,25 @@ def parsing(resposta_html):
     except Exception as e:
         print("Erro ao fazer o parsing HTML", e)
         
-def encontrar_links(soup):
+def encontrar_links(soup, dominio):
+    links_uteis = set()
+    dominio_base = urlparse(dominio).netloc
+
     try:
-        cards_pais = soup.find("div", class_="ui three doubling link cards")
-        cards = cards_pais.find_all("a")
+        tags_a = soup.find_all("a",href = True)
+        for tag in tags_a:
+            href = tag['href'].strip()
+
+            if not href or href.startswith(('#','javascript:','mailto:','tel:')):
+                continue
+
+            url_completa = urljoin(dominio,href)
+            if (urlparse(url_completa).netloc == dominio_base):
+                links_uteis.add(url_completa)
     except Exception as e:
-        print(f"Erro ao encontrar links: {e}")
-      
-    links = []
-    for card in cards:
-        try:
-            link = card['href']
-            links.append(link)
-        except Exception:
-            pass
+        print(f"Erro ao processar links: {e}")
         
-    return links
+    return list(links_uteis)
 
 def extrair_texto(soup):
     soup_limpo = copy.copy(soup)
@@ -69,48 +74,54 @@ def extrair_texto(soup):
 #         print(f"Erro ao fazer a requisição de busca de telefones: {e}")
         
 def encontrar_telefones(soup):
+    telefones_unicos = set()
 
-    try:
-        descricao = soup.find_all("div", class_="sixteen wide column")[2].p.get_text().strip()
-    except Exception as e:
-        print(f"Erro ao encontrar descrição: {e}")
+    texto_pagina = extrair_texto(soup)
     
-    regex = re.findall(r"((?:\+?\d{2}\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[-\s]?\d{4})", descricao)
-    if(regex): 
-        return regex
-    else:
-        return None
+    regex_padrao = r"((?:\+?\d{2}\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[-\s]?\d{4})"
+    matches = re.findall(regex_padrao, texto_pagina)
 
-def descobrir_telefones(dominio, headers):
+    for match in matches:
+        apenas_digitos = re.sub(r'\D', '', match)
+        if (8 <= len(apenas_digitos) <= 13):
+            telefones_unicos.add(match.strip())
+
+    return list(telefones_unicos) if telefones_unicos else None
+
+def descobrir_telefones(headers):
     thread_name = threading.current_thread().name
     print(f"{thread_name} Iniciando Trabalho!")
 
     while True:
-        try:
-            if len(LINKS) > 0:
-                link_anuncio = LINKS.pop()
-            else:
-                print(f"[{thread_name}] Lista vazia. Encerrando.")
+        link_anuncio = None
+        with LOCK:
+            try:
+                if len(LINKS) > 0:
+                    link_anuncio = LINKS.pop()
+                else:
+                    print(f"[{thread_name}] Lista vazia. Encerrando.")
+                    break
+            except:
                 break
-        except:
+        if link_anuncio is None:
             break
         
-        url_completa = dominio + link_anuncio
         print(f"[{thread_name}] Acessando: {link_anuncio}")
 
-        resposta_anuncio = requisicao(url_completa, headers)
+        resposta_anuncio = requisicao(link_anuncio, headers)
         
         if resposta_anuncio:
             soup_anuncio = parsing(resposta_anuncio)
-        
             if soup_anuncio:
                 telefones = encontrar_telefones(soup_anuncio)
                 if telefones:
                     for telefone in telefones:
-                        print(f"Encontrado: {telefone}")
-                        TELEFONES.append(telefone)
+                        with LOCK:
+                            print(f"📞 Encontrado: {telefone}")
+                            TELEFONES.append(telefone)
                 else:
-                    print(f"[{thread_name}] ⚠️ Regex falhou no link: {link_anuncio}")
+                    print(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
+                    pass
                     
    
 def salvar_telefones():
@@ -133,6 +144,10 @@ if __name__ == "__main__":
     url_alvo = input("Digite a url do site alvo: ")
     dominio = filtrar_url(url_alvo)
 
+    # Debugging
+    print(f"Alvo: {url_alvo}")
+    print(f"Agente: {agent}")
+
     if robots_parser(url_alvo, agent):
         print("✅ Permissão concedida!")
         response = requisicao(url_alvo, headers)
@@ -140,22 +155,25 @@ if __name__ == "__main__":
         if response:
             soup_busca = parsing(response)
             if soup_busca:
-                LINKS = encontrar_links(soup_busca)
-                print(f"Links encontrados: {len(LINKS)}")
+                LINKS = encontrar_links(soup_busca, url_alvo)
+                print(f"Links internos encontrados para varredura: {len(LINKS)}")
                 
-                THREADS = []
-                for i in range(5):
-                    t = threading.Thread(target=descobrir_telefones, args=(dominio, headers))
-                    THREADS.append(t)
+                if len(LINKS) > 0:
+                    THREADS = []
+                    for i in range(3):
+                        t = threading.Thread(target=descobrir_telefones, args=(headers,))
+                        THREADS.append(t)
+                        
+                    for t in THREADS:
+                        t.start()
                     
-                for t in THREADS:
-                    t.start()
+                    for t in THREADS:
+                        t.join()
                 
-                for t in THREADS:
-                    t.join()
-                
-                print(f"Fim de execução. {len(TELEFONES)} coletados.")
-                salvar_telefones()
+                    print(f"Fim de execução. {len(TELEFONES)} coletados.")
+                    salvar_telefones()
+                else:
+                    print("Nenhum link interno encontrado na página inicial.")
     else:
         print("❌ Acesso negado pelo Robots.txt")
     
