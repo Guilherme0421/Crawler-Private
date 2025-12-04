@@ -7,17 +7,19 @@ def get_random_user_agent():
     agent = ua.random
     return agent
 
-def robots_parser(url):
+def filtrar_url(url):
     url_filtered = urlparse(url)
-    url_base = f"{url_filtered.scheme}://{url_filtered.netloc}"
-    robots_url=f"{url_base}/robots.txt"
+    dominio = f"{url_filtered.scheme}://{url_filtered.netloc}"
+    return dominio
 
-    print(f"Ferificando regras em: {robots_url}")
+def robots_parser(url, agent):
+    dominio = filtrar_url(url)
+    robots_url=f"{dominio}/robots.txt"
+
+    print(f"Verificando regras em: {robots_url}")
 
     rp = RobotFileParser()
     rp.set_url(robots_url)
-
-    userAgent = get_random_user_agent()
 
     try:
         rp.read()
@@ -25,7 +27,7 @@ def robots_parser(url):
         print(f"Erro ao ler o arquivo robots.txt: {e}")
         return False
     
-    if(rp.can_fetch(url, userAgent)):
+    if(rp.can_fetch(agent, url)):
         return True
     else:
         return False
