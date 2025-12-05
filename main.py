@@ -3,8 +3,9 @@ import threading
 import sys
 from src.config import logger, LINKS
 from src.network import get_random_user_agent, check_robots, requisicao
-from src.parser import parsing, encontrar_links, encontrar_telefones
+from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
+from src.database import salvar_telefones
 
 def main():
     # Configuração de argumentos(CLI)
@@ -24,10 +25,10 @@ def main():
     header = {'User-Agent': agent}
     
     if not check_robots(url_alvo, agent):
-        logger.error("Acesso negado pelo robots.txt. Encerrando operação!")
+        logger.error("🔴 Acesso negado pelo robots.txt. Encerrando operação!")
         sys.exit(1)
     else:
-        logger.info("Permissão concedida pelo robots.txt")
+        logger.info("🟢 Permissão concedida pelo robots.txt")
         
     html_inicial = requisicao(url_alvo, header)
     
@@ -56,6 +57,7 @@ def main():
             t.join()
             
         logger.info("Fim da execução. Logs salvos na pasta /logs.")
+        salvar_telefones()
         
 if __name__ == "__main__":
     try:
