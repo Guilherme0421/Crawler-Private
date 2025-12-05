@@ -2,7 +2,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-orange?style=for-the-badge)
 
-> Um web crawler focado em extração de dados (telefones) de anúncios classificados, utilizando processamento paralelo para máxima eficiência.
+> Um web crawler focado em extração de dados (telefones) de anúncios classificados, utilizando processamento paralelo para obter melhor eficiência.
 ---
 ## Funcionalidades
 * **⚡ Multi-threading:** Utiliza o módulo `threading` para rodar múltiplos workers simultaneamente, acelerando a coleta de dados.
@@ -22,17 +22,19 @@
 | **Requests** | Requisições HTTP |
 | **Threading** | Concorrência e Paralelismo |
 
+---
+
 ## Como rodar ?
 #### Pré-requisitos
 Certifique-se de ter o Python instalado.
 #### Passo a passo
-    1 - Clone o repositório
+####    1 - Clone o repositório
         git clone https://github.com/Guilherme0421/Crawler----Iniciante/tree/aprimoramento-craw
 
-    2 - Crie um ambiente virtual (Recomendado):
+####    2 - Crie um ambiente virtual (Recomendado):
         pip install virtualenv | virtualenv venv | source venv/bin/activate
     
-    3 - Instale as dependências:
+####    3 - Instale as dependências:
         pip install -r requirements.txt
         
 ## Exemplos de como rodar o código direto pelo terminal (CLI)
