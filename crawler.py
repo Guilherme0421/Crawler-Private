@@ -2,7 +2,10 @@ import threading
 import copy
 import re
 import requests
+import time
+import random
 from urllib.parse import urlparse, urljoin
+from urllib.robotparser import RobotFileParser
 from users_agent import get_random_user_agent, robots_parser,filtrar_url
 from bs4 import BeautifulSoup
 
@@ -42,7 +45,7 @@ def encontrar_links(soup, dominio):
             if not href or href.startswith(('#','javascript:','mailto:','tel:')):
                 continue
 
-            url_completa = urljoin(dominio,href)
+            url_completa = urljoin(dominio, href)
             if (urlparse(url_completa).netloc == dominio_base):
                 links_uteis.add(url_completa)
     except Exception as e:
@@ -62,29 +65,40 @@ def extrair_texto(soup):
     texto_limpo = ' '.join(chunk for chunk in lines if chunk)
 
     return texto_limpo
-
-# def acessar_anuncio(link):
-#     try:
-#         response = requests.get(dominio + link)
-#         if(response.status_code == 200):
-#             return response.text    
-#         else:
-#             print("Erro ao fazer requisição de busca de telefones")
-#     except Exception as e:
-#         print(f"Erro ao fazer a requisição de busca de telefones: {e}")
+        
+def formatar_numero_telefone(numero):
+    tamanho = len(numero)
+    
+    if tamanho == 11:
+        return f"({numero[:2]}) {numero[2:7]}-{numero[7:]}"
+    elif tamanho == 10:
+        return f"({numero[:2]}) {numero[2:6]}-{numero[6:]}"
+    elif tamanho == 9:
+        return f"{numero[:5]}-{numero[5:]}"
+    elif tamanho == 8:
+        return f"{numero[:4]}-{numero[4:]}"
+    else:
+        print("Número inválido")
+        
+    return numero
         
 def encontrar_telefones(soup):
     telefones_unicos = set()
 
     texto_pagina = extrair_texto(soup)
     
-    regex_padrao = r"((?:\+?\d{2}\s?)?(?:\(?\d{2}\)?\s?)?\d{4,5}[-\s]?\d{4})"
-    matches = re.findall(regex_padrao, texto_pagina)
+    regex_padrao = r"\b(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-5])\d{3})[-\s]?(\d{4}))\b"
+    matches = re.finditer(regex_padrao, texto_pagina)
 
     for match in matches:
-        apenas_digitos = re.sub(r'\D', '', match)
-        if (8 <= len(apenas_digitos) <= 13):
-            telefones_unicos.add(match.strip())
+        numero_completo = match.group(0)
+        
+        apenas_digitos = re.sub(r'\D', '', numero_completo)
+        
+        if len(apenas_digitos) in [8, 9, 10, 11]:
+            numero_formatado = formatar_numero_telefone(apenas_digitos)
+            
+            telefones_unicos.add(numero_formatado)
 
     return list(telefones_unicos) if telefones_unicos else None
 
@@ -93,7 +107,11 @@ def descobrir_telefones(headers):
     print(f"{thread_name} Iniciando Trabalho!")
 
     while True:
+        delay = random.uniform(2.0, 5.0)
+        time.sleep(delay)
+        
         link_anuncio = None
+        
         with LOCK:
             try:
                 if len(LINKS) > 0:
@@ -117,8 +135,8 @@ def descobrir_telefones(headers):
                 if telefones:
                     for telefone in telefones:
                         with LOCK:
-                            print(f"📞 Encontrado: {telefone}")
-                            TELEFONES.append(telefone)
+                            print(f"{thread_name} 📞 Encontrado: {telefone}")
+                            TELEFONES.append(f"{telefone}; {link_anuncio}")
                 else:
                     print(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
                     pass
@@ -142,11 +160,10 @@ if __name__ == "__main__":
     }
 
     url_alvo = input("Digite a url do site alvo: ")
-    dominio = filtrar_url(url_alvo)
 
     # Debugging
     print(f"Alvo: {url_alvo}")
-    print(f"Agente: {agent}")
+    print(f"Agente: {agent[:30]}")
 
     if robots_parser(url_alvo, agent):
         print("✅ Permissão concedida!")
@@ -170,8 +187,8 @@ if __name__ == "__main__":
                     for t in THREADS:
                         t.join()
                 
-                    print(f"Fim de execução. {len(TELEFONES)} coletados.")
-                    salvar_telefones()
+                    print(f"\nFim de execução. {len(TELEFONES)} coletados.")
+                    #salvar_telefones()
                 else:
                     print("Nenhum link interno encontrado na página inicial.")
     else:
