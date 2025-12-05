@@ -38,7 +38,7 @@ def main():
     soup = parsing(html_inicial)
     if soup:
         novos_links = encontrar_links(soup, url_alvo)
-        LINKS.append(novos_links)
+        LINKS.extend(novos_links)
         
         logger.info(f"Seed inicial: {len(LINKS)} encontrados para processament.")
         
