@@ -29,13 +29,13 @@
 Certifique-se de ter o Python instalado.
 #### Passo a passo
 ####    1 - Clone o repositório
-        git clone https://github.com/Guilherme0421/Crawler----Iniciante/tree/aprimoramento-craw
+    git clone https://github.com/Guilherme0421/Crawler----Iniciante/tree/aprimoramento-craw
 
 ####    2 - Crie um ambiente virtual (Recomendado):
-        pip install virtualenv | virtualenv venv | source venv/bin/activate
+    pip install virtualenv | virtualenv venv | source venv/bin/activate
     
 ####    3 - Instale as dependências:
-        pip install -r requirements.txt
+    pip install -r requirements.txt
         
 ## Exemplos de como rodar o código direto pelo terminal (CLI)
 #### Comando para rodar o programa com uso de threads padrão = 3.
