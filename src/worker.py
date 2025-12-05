@@ -8,7 +8,7 @@ from src.database import verificar_existencia_numero
 
 def descobrir_telefones(headers):
     thread_name = threading.current_thread().name
-    print(f"{thread_name} Iniciando Trabalho!")
+    logger.info(f"{thread_name} Iniciando Trabalho!")
 
     while True:
         delay = random.uniform(2.0, 5.0)
@@ -21,14 +21,14 @@ def descobrir_telefones(headers):
                 if len(LINKS) > 0:
                     link_anuncio = LINKS.pop()
                 else:
-                    print(f"[{thread_name}] Lista vazia. Encerrando.")
+                    logger.warning(f"[{thread_name}] Lista vazia. Encerrando.")
                     break
             except:
                 break
         if link_anuncio is None:
             break
         
-        print(f"[{thread_name}] Acessando: {link_anuncio}")
+        logger.info(f"[{thread_name}] Acessando: {link_anuncio}")
 
         resposta_anuncio = requisicao(link_anuncio, headers)
         
@@ -40,11 +40,11 @@ def descobrir_telefones(headers):
                     for telefone in telefones:
                         if(verificar_existencia_numero(telefone)):
                             with LOCK:
-                                print(f"{thread_name} 📞 Encontrado: {telefone}")
+                                logger.info(f"{thread_name} 📞 Encontrado: {telefone}")
                                 TELEFONES.append(f"{telefone}; {link_anuncio}")
                         else:
-                            print(f"[{thread_name}] ❌ Ignorando repetido: {telefone}")
+                            logger.info(f"[{thread_name}] ❌ Ignorando repetido: {telefone}")
                 else:
-                    print(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
+                    logger.info(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
                     pass
             
