@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 
 LINKS = []
 TELEFONES = []
+CACHE_TELEFONES = set()
 LOCK = threading.Lock()
 
 def requisicao(url, headers):
@@ -102,6 +103,14 @@ def encontrar_telefones(soup):
 
     return list(telefones_unicos) if telefones_unicos else None
 
+def verificar_existencia_numero(numero):
+    with LOCK:
+        if numero in CACHE_TELEFONES:
+            return False
+        else:
+            CACHE_TELEFONES.add(numero)
+            return True
+
 def descobrir_telefones(headers):
     thread_name = threading.current_thread().name
     print(f"{thread_name} Iniciando Trabalho!")
@@ -134,9 +143,12 @@ def descobrir_telefones(headers):
                 telefones = encontrar_telefones(soup_anuncio)
                 if telefones:
                     for telefone in telefones:
-                        with LOCK:
-                            print(f"{thread_name} 📞 Encontrado: {telefone}")
-                            TELEFONES.append(f"{telefone}; {link_anuncio}")
+                        if(verificar_existencia_numero(telefone)):
+                            with LOCK:
+                                print(f"{thread_name} 📞 Encontrado: {telefone}")
+                                TELEFONES.append(f"{telefone}; {link_anuncio}")
+                        else:
+                            print(f"[{thread_name}] ❌ Ignorando repetido: {telefone}")
                 else:
                     print(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
                     pass
@@ -188,7 +200,7 @@ if __name__ == "__main__":
                         t.join()
                 
                     print(f"\nFim de execução. {len(TELEFONES)} coletados.")
-                    #salvar_telefones()
+                    salvar_telefones()
                 else:
                     print("Nenhum link interno encontrado na página inicial.")
     else:
