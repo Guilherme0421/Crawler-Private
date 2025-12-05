@@ -10,7 +10,7 @@ def parsing(resposta_html):
         soup = BeautifulSoup(resposta_html, 'html.parser')
         return soup
     except Exception as e:
-        print("Erro ao fazer o parsing HTML", e)
+        logger.error(f"Erro ao fazer o parsing HTML: {e}")
         
 
 def encontrar_links(soup, dominio):
@@ -29,7 +29,7 @@ def encontrar_links(soup, dominio):
             if (urlparse(url_completa).netloc == dominio_base):
                 links_uteis.add(url_completa)
     except Exception as e:
-        print(f"Erro ao processar links: {e}")
+        logger.error(f"Erro ao processar links: {e}")
         
     return list(links_uteis)
 
@@ -81,6 +81,6 @@ def formatar_numero_telefone(numero):
     elif tamanho == 8:
         return f"{numero[:4]}-{numero[4:]}"
     else:
-        print("Número inválido")
+        logger.error("Número inválido")
         
     return numero
