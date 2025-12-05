@@ -8,43 +8,47 @@ from src.database import verificar_existencia_numero
 
 def descobrir_telefones(headers):
     thread_name = threading.current_thread().name
-    logger.info(f"{thread_name} Iniciando Trabalho!")
+    logger.info(f"{thread_name} Iniciando Thread!")
 
     while True:
         delay = random.uniform(2.0, 5.0)
         time.sleep(delay)
         
-        link_anuncio = None
+        link_alvo = None
         
         with LOCK:
             try:
                 if len(LINKS) > 0:
-                    link_anuncio = LINKS.pop()
+                    link_alvo = LINKS.pop(0)
                 else:
-                    logger.warning(f"[{thread_name}] Lista vazia. Encerrando.")
+                    logger.info(f"[{thread_name}] Fila vazia. Encerrando thread.")
                     break
-            except:
+            except Exception as e:
+                logger.error(f"Erro ao acessar fila de links: {e}")
                 break
-        if link_anuncio is None:
+            
+        if link_alvo is None:
             break
         
-        logger.info(f"[{thread_name}] Acessando: {link_anuncio}")
+        logger.info(f"[{thread_name}] Acessando: {link_alvo}")
 
-        resposta_anuncio = requisicao(link_anuncio, headers)
+        resposta_html = requisicao(link_alvo, headers)
         
-        if resposta_anuncio:
-            soup_anuncio = parsing(resposta_anuncio)
+        if resposta_html:
+            soup_anuncio = parsing(resposta_html)
+            
             if soup_anuncio:
                 telefones = encontrar_telefones(soup_anuncio)
+                
                 if telefones:
                     for telefone in telefones:
                         if(verificar_existencia_numero(telefone)):
                             with LOCK:
-                                logger.info(f"{thread_name} 📞 Encontrado: {telefone}")
-                                TELEFONES.append(f"{telefone}; {link_anuncio}")
+                                logger.info(f"[{thread_name}] 📞 Encontrado: {telefone}")
+                                TELEFONES.append(f"{telefone}; {link_alvo}")
                         else:
                             logger.info(f"[{thread_name}] ❌ Ignorando repetido: {telefone}")
                 else:
-                    logger.info(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_anuncio}")
+                    logger.info(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_alvo}")
                     pass
             
