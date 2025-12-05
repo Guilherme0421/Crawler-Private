@@ -13,6 +13,6 @@ def salvar_telefones():
         with open("./data/telefones.csv","a") as arquivo:
             for telefone in TELEFONES:
                 arquivo.write(f"{telefone}\n")
-            print("Telefones salvos com sucesso em telefones.csv")
+            logger.info("Telefones salvos com sucesso em telefones.csv")
     except Exception as e:
-        print(f"Erro ao salvar arquivo: {e}")
+        logger.critical(f"Erro ao salvar arquivo: {e}")
