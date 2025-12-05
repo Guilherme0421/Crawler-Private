@@ -1,4 +1,5 @@
 import requests
+import sys
 from urllib.robotparser import RobotFileParser
 from urllib.parse import urlparse
 from fake_useragent import UserAgent
@@ -15,9 +16,13 @@ def requisicao(url, headers):
         logger.error(f"Falha de conexão em: {url}: {e}")
         
 def get_random_user_agent():
-    ua = UserAgent(platforms=["desktop"], browsers=["Chrome"])
-    agent = ua.random
-    return agent
+    try:
+        ua = UserAgent(platforms=["desktop"], browsers=["Chrome"])
+        agent = ua.random
+        return agent
+    except Exception as e:
+        logger.critical("Falha ao criar o UserAgent. Encerrando...")
+        sys.exit(0)
   
 def filtrar_url(url):
     url_filtered = urlparse(url)
@@ -28,7 +33,7 @@ def check_robots(url, agent):
     dominio = filtrar_url(url)
     robots_url=f"{dominio}/robots.txt"
 
-    print(f"Verificando regras em: {robots_url}")
+    logger.info(f"Verificando regras em: {robots_url}")
 
     rp = RobotFileParser()
     rp.set_url(robots_url)
@@ -36,7 +41,7 @@ def check_robots(url, agent):
     try:
         rp.read()
     except Exception as e:
-        print(f"Erro ao ler o arquivo robots.txt: {e}")
+        logger.error(f"Erro ao ler o arquivo robots.txt: {e}")
         return False
     
     if(rp.can_fetch(agent, url)):
