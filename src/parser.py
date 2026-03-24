@@ -2,6 +2,7 @@ import re
 import copy
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
+import phonenumbers
 
 from src.config import logger
 
@@ -48,39 +49,33 @@ def extrair_texto(soup):
     return texto_limpo
 
 
-def encontrar_telefones(soup):
+def encontrar_telefones(texto):
+    """
+    Extrai e valida números de telefone do texto fornecido usando a biblioteca phonenumbers.
+    
+    Args:
+        texto (str): O conteúdo HTML ou texto extraído pelo crawler.
+    
+    Returns:
+        list or None: Lista de números de telefone normalizados no formato E.164, ou None se nenhum encontrado.
+    """
     telefones_unicos = set()
-
-    texto_pagina = extrair_texto(soup)
     
-    regex_padrao = r"\b(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-5])\d{3})[-\s]?(\d{4}))\b"
-    matches = re.finditer(regex_padrao, texto_pagina)
-
-    for match in matches:
-        numero_completo = match.group(0)
-        
-        apenas_digitos = re.sub(r'\D', '', numero_completo)
-        
-        if len(apenas_digitos) in [8, 9, 10, 11]:
-            numero_formatado = formatar_numero_telefone(apenas_digitos)
+    try:
+        # Usar PhoneNumberMatcher para encontrar candidatos a números de telefone no padrão brasileiro
+        for match in phonenumbers.PhoneNumberMatcher(texto, "BR"):
+            numero = match.number
             
-            telefones_unicos.add(numero_formatado)
-
-    return list(telefones_unicos) if telefones_unicos else None
-
-
-def formatar_numero_telefone(numero):
-    tamanho = len(numero)
-    
-    if tamanho == 11:
-        return f"({numero[:2]}) {numero[2:7]}-{numero[7:]}"
-    elif tamanho == 10:
-        return f"({numero[:2]}) {numero[2:6]}-{numero[6:]}"
-    elif tamanho == 9:
-        return f"{numero[:5]}-{numero[5:]}"
-    elif tamanho == 8:
-        return f"{numero[:4]}-{numero[4:]}"
-    else:
-        logger.error("Número inválido")
+            # Validar o número
+            if phonenumbers.is_valid_number(numero):
+                # Normalizar para formato E.164
+                numero_normalizado = phonenumbers.format_number(numero, phonenumbers.PhoneNumberFormat.E164)
+                telefones_unicos.add(numero_normalizado)
         
-    return numero
+        return list(telefones_unicos) if telefones_unicos else None
+    
+    except Exception as e:
+        logger.error(f"Erro ao extrair telefones: {e}")
+        return None
+
+

@@ -20,7 +20,6 @@ logging.basicConfig(
 logger = logging.getLogger("SOC_Crawler")
 
 LINKS = []
-TELEFONES = []
 CACHE_TELEFONES = set()
 LOCK = threading.Lock()
 

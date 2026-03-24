@@ -1,10 +1,10 @@
 import threading
 import time
 import random
-from src.config import logger, LINKS, LOCK, TELEFONES
+from src.config import logger, LINKS, LOCK
 from src.network import requisicao
-from src.parser import parsing, encontrar_telefones
-from src.database import verificar_existencia_numero
+from src.parser import parsing, encontrar_telefones, extrair_texto
+from src.database import salvar_telefones
 
 def descobrir_telefones(headers):
     thread_name = threading.current_thread().name
@@ -38,16 +38,12 @@ def descobrir_telefones(headers):
             soup_anuncio = parsing(resposta_html)
             
             if soup_anuncio:
-                telefones = encontrar_telefones(soup_anuncio)
+                texto_anuncio = extrair_texto(soup_anuncio)
+                telefones = encontrar_telefones(texto_anuncio)
                 
                 if telefones:
-                    for telefone in telefones:
-                        if(verificar_existencia_numero(telefone)):
-                            with LOCK:
-                                logger.info(f"[{thread_name}] 📞 Encontrado: {telefone}")
-                                TELEFONES.append(f"{telefone}; {link_alvo}")
-                        else:
-                            logger.info(f"[{thread_name}] ❌ Ignorando repetido: {telefone}")
+                    logger.info(f"[{thread_name}] 📞 Encontrados {len(telefones)} telefone(s) em {link_alvo}")
+                    salvar_telefones(telefones, link_alvo)
                 else:
                     logger.info(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_alvo}")
                     pass

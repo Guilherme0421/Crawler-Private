@@ -5,7 +5,6 @@ from src.config import logger, LINKS
 from src.network import get_random_user_agent, check_robots, requisicao
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
-from src.database import salvar_telefones
 
 def main():
     # Configuração de argumentos(CLI)
@@ -57,7 +56,6 @@ def main():
             t.join()
             
         logger.info("Fim da execução. Logs salvos na pasta /logs.")
-        salvar_telefones()
         
 if __name__ == "__main__":
     try:
