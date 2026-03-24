@@ -1,4 +1,4 @@
-# 🕷️ PyCrawler - Extrator de números telefonicos
+# 🕷️ PyCrawler - Extrator de números telefonicos v1.0.1
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-orange?style=for-the-badge)
 
@@ -29,10 +29,9 @@
 Certifique-se de ter o Python instalado.
 #### Passo a passo
 ####    1 - Clone o repositório
-    git clone https://github.com/Guilherme0421/Crawler----Iniciante/tree/aprimoramento-craw
-
+    https://github.com/Guilherme0421/Crawler----Iniciante.git
 ####    2 - Crie um ambiente virtual (Recomendado):
-    pip install virtualenv | virtualenv venv | source venv/bin/activate
+    python -m venv ambiente_virtual || .\ambiente_virtual\Scripts\activate
     
 ####    3 - Instale as dependências:
     pip install -r requirements.txt
