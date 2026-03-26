@@ -1,12 +1,27 @@
 import argparse
 import threading
 import sys
+import os
+import time
 from src.config import logger, LINKS, TELEMETRIA
 from src.network import get_random_user_agent, check_robots, requisicao
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
 
+def exibir_introducao():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("="*60)
+    print("      CRAWLER PROFISSIONAL - SOLUÇÃO DE EXTRAÇÃO v1.0.1")
+    print("="*60)
+    print("  Desenvolvido por: Seu Nome/Empresa")
+    print("  Status: Sistema Inicializado...")
+    print("  Segurança: HTTPS & Stealth Mode Ativados")
+    print("="*60)
+    print("\n")
+    time.sleep(1) # Pausa dramática para leitura
+
 def main():
+    exibir_introducao()
     # Configuração de argumentos(CLI)
     parser = argparse.ArgumentParser(description="Crawler SOC - Extrator de numeros de telefone.")
     parser.add_argument("--url", required=True, help="URL Inicial do site alvo (com http/https)")
