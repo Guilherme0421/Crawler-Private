@@ -1,7 +1,7 @@
 import threading
 import time
 import random
-from src.config import logger, LINKS, LOCK
+from src.config import logger, LINKS, LOCK, TELEMETRIA
 from src.network import requisicao
 from src.parser import parsing, encontrar_telefones, extrair_texto
 from src.database import salvar_telefones
@@ -30,11 +30,16 @@ def descobrir_telefones(headers):
         if link_alvo is None:
             break
         
+        with LOCK:
+            TELEMETRIA.urls_processadas += 1
+        
         logger.info(f"[{thread_name}] Acessando: {link_alvo}")
 
         resposta_html = requisicao(link_alvo, headers)
         
         if resposta_html:
+            with LOCK:
+                TELEMETRIA.sucessos += 1
             soup_anuncio = parsing(resposta_html)
             
             if soup_anuncio:
@@ -42,9 +47,15 @@ def descobrir_telefones(headers):
                 telefones = encontrar_telefones(texto_anuncio)
                 
                 if telefones:
-                    logger.info(f"[{thread_name}] 📞 Encontrados {len(telefones)} telefone(s) em {link_alvo}")
+                    logger.info(f"[{thread_name}] Encontrados {len(telefones)} telefone(s) em {link_alvo}")
                     salvar_telefones(telefones, link_alvo)
+                    with LOCK:
+                        TELEMETRIA.telefones_encontrados += len(telefones)
                 else:
-                    logger.info(f"[{thread_name}] ⚠️ Nenhum padrão de telefone encontrado: {link_alvo}")
+                    logger.info(f"[{thread_name}] Nenhum padrão de telefone encontrado: {link_alvo}")
                     pass
+        else:
+            with LOCK:
+                TELEMETRIA.falhas += 1
+            logger.warning(f"[{thread_name}] Falha ao acessar: {link_alvo}")
             

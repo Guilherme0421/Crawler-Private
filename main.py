@@ -1,7 +1,7 @@
 import argparse
 import threading
 import sys
-from src.config import logger, LINKS
+from src.config import logger, LINKS, TELEMETRIA
 from src.network import get_random_user_agent, check_robots, requisicao
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
@@ -20,6 +20,8 @@ def main():
     logger.info(f"Alvo: {url_alvo}")
     logger.info(f"Threads: {num_threads}")
     
+    TELEMETRIA.iniciar()
+    
     agent = get_random_user_agent()
     header = {'User-Agent': agent}
     
@@ -27,7 +29,7 @@ def main():
         logger.error("🔴 Acesso negado pelo robots.txt. Encerrando operação!")
         sys.exit(1)
     else:
-        logger.info("🟢 Permissão concedida pelo robots.txt")
+        logger.info("Permissão concedida pelo robots.txt")
         
     html_inicial = requisicao(url_alvo, header)
     
@@ -55,7 +57,9 @@ def main():
         for t in threads:
             t.join()
             
+        TELEMETRIA.finalizar()
         logger.info("Fim da execução. Logs salvos na pasta /logs.")
+        logger.info(TELEMETRIA.relatorio())
         
 if __name__ == "__main__":
     try:
