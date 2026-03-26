@@ -18,7 +18,7 @@ def exibir_introducao():
     print("  Segurança: HTTPS & Stealth Mode Ativados")
     print("="*60)
     print("\n")
-    time.sleep(1) # Pausa dramática para leitura
+    time.sleep(1)
 
 def main():
     exibir_introducao()
