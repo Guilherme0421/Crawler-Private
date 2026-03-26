@@ -5,15 +5,37 @@ venv/
 env/
 
 # Arquivos compilados do python
-__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # Logs
 logs/
 *.log
 
-# Data Base
+# Base de dados e dumps
 data/
 *.csv
+*.db
 
-# OS
+# IDEs/editor
+.vscode/
+*.code-workspace
+.idea/
+
+# Sistema
 .DS_Store
+Thumbs.db
+
+# Arquivos de pacotes
+dist/
+build/
+*.egg-info/
+
+# Arquivos de lock de cache
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Config local
+.env
