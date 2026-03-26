@@ -1,13 +1,27 @@
 import argparse
 import threading
 import sys
-from src.config import logger, LINKS
+import os
+import time
+from src.config import logger, LINKS, TELEMETRIA
 from src.network import get_random_user_agent, check_robots, requisicao
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
-from src.database import salvar_telefones
+
+def exibir_introducao():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("="*60)
+    print("      CRAWLER PROFISSIONAL - SOLUÇÃO DE EXTRAÇÃO v1.0.1")
+    print("="*60)
+    print("  Desenvolvido por: Seu Nome/Empresa")
+    print("  Status: Sistema Inicializado...")
+    print("  Segurança: HTTPS & Stealth Mode Ativados")
+    print("="*60)
+    print("\n")
+    time.sleep(1) # Pausa dramática para leitura
 
 def main():
+    exibir_introducao()
     # Configuração de argumentos(CLI)
     parser = argparse.ArgumentParser(description="Crawler SOC - Extrator de numeros de telefone.")
     parser.add_argument("--url", required=True, help="URL Inicial do site alvo (com http/https)")
@@ -21,6 +35,8 @@ def main():
     logger.info(f"Alvo: {url_alvo}")
     logger.info(f"Threads: {num_threads}")
     
+    TELEMETRIA.iniciar()
+    
     agent = get_random_user_agent()
     header = {'User-Agent': agent}
     
@@ -28,7 +44,7 @@ def main():
         logger.error("🔴 Acesso negado pelo robots.txt. Encerrando operação!")
         sys.exit(1)
     else:
-        logger.info("🟢 Permissão concedida pelo robots.txt")
+        logger.info("Permissão concedida pelo robots.txt")
         
     html_inicial = requisicao(url_alvo, header)
     
@@ -56,8 +72,9 @@ def main():
         for t in threads:
             t.join()
             
+        TELEMETRIA.finalizar()
         logger.info("Fim da execução. Logs salvos na pasta /logs.")
-        salvar_telefones()
+        logger.info(TELEMETRIA.relatorio())
         
 if __name__ == "__main__":
     try:
