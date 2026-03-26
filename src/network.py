@@ -50,6 +50,12 @@ def filtrar_url(url):
     dominio = f"{url_filtered.scheme}://{url_filtered.netloc}"
     return dominio  
 
+def converter_https(url):
+    parsed = urlparse(url)
+    if parsed.scheme == 'http':
+        return parsed._replace(scheme='https').geturl()
+    return url  
+
 def get_crawl_delay(url, agent):
     dominio = filtrar_url(url)
     robots_url = f"{dominio}/robots.txt"
