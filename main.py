@@ -4,7 +4,7 @@ import sys
 import os
 import time
 from src.config import logger, LINKS, TELEMETRIA
-from src.network import get_random_user_agent, check_robots, requisicao
+from src.network import get_random_user_agent, check_robots, requisicao, get_crawl_delay
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
 
@@ -46,7 +46,9 @@ def main():
     else:
         logger.info("Permissão concedida pelo robots.txt")
         
-    html_inicial = requisicao(url_alvo, header)
+    crawl_delay = get_crawl_delay(url_alvo, agent)
+        
+    html_inicial = requisicao(url_alvo, header, crawl_delay)
     
     if not html_inicial:
         logger.critical("Falha ao baixar a página inicial. Encerrando!")

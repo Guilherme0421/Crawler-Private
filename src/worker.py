@@ -2,7 +2,7 @@ import threading
 import time
 import random
 from src.config import logger, LINKS, LOCK, TELEMETRIA
-from src.network import requisicao
+from src.network import requisicao, get_crawl_delay
 from src.parser import parsing, encontrar_telefones, extrair_texto
 from src.database import salvar_telefones
 
@@ -35,7 +35,9 @@ def descobrir_telefones(headers):
         
         logger.info(f"[{thread_name}] Acessando: {link_alvo}")
 
-        resposta_html = requisicao(link_alvo, headers)
+        crawl_delay = get_crawl_delay(link_alvo, headers.get('User-Agent', '*'))
+
+        resposta_html = requisicao(link_alvo, headers, crawl_delay)
         
         if resposta_html:
             with LOCK:
