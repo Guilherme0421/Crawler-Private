@@ -1,7 +1,9 @@
+import certifi
 import requests
 import random
 import time
 import threading
+import urllib3
 from urllib.robotparser import RobotFileParser
 from urllib.parse import urlparse
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -43,9 +45,11 @@ def _get_robot_parser(url):
         return parser
 
 
-def criar_sessao(headers=None):
+def criar_sessao(headers=None, verify=True):
     session = requests.Session()
-    session.verify = True
+    session.verify = certifi.where() if verify else False
+    if not verify:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     if headers:
         session.headers.update(headers)
     return session
