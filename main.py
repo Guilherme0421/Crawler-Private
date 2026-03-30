@@ -4,7 +4,7 @@ import sys
 import os
 import time
 from src.config import logger, URL_QUEUE, SEEN_URLS, TELEMETRIA
-from src.network import (
+from src.infra.network import (
     get_random_user_agent,
     check_robots,
     requisicao,
@@ -12,8 +12,8 @@ from src.network import (
     gerar_headers_realistas,
     criar_sessao,
 )
-from src.parser import parsing, encontrar_links
-from src.worker import descobrir_telefones
+from src.domain.parser import parsing, encontrar_links
+from src.app.worker import descobrir_telefones
 
 
 def exibir_introducao():

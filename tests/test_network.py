@@ -1,8 +1,8 @@
 import pytest
 import urllib3
 from unittest.mock import patch, MagicMock
-import src.network as network
-from src.network import requisicao, converter_https, get_crawl_delay, gerar_headers_realistas, criar_sessao
+import src.infra.network as network
+from src.infra.network import requisicao, converter_https, get_crawl_delay, gerar_headers_realistas, criar_sessao
 from tenacity import RetryError
 
 def test_converter_https():

@@ -1,5 +1,5 @@
 import pytest
-from src.parser import parsing, encontrar_links, extrair_texto, encontrar_telefones
+from src.domain.parser import parsing, encontrar_links, extrair_texto, encontrar_telefones
 
 def test_parsing_html_retorna_soup():
     html = '<html><head><title>Teste</title></head><body><p>Olá</p></body></html>'

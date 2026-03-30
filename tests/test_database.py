@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from src.database import salvar_telefones
+from src.infra.database import salvar_telefones
 
 
 def test_salvar_telefones_cria_arquivo_e_registra(tmp_path, monkeypatch):

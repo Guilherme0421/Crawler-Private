@@ -2,7 +2,7 @@ import threading
 import queue
 from datetime import datetime
 
-from src.logger_config import logger
+from src.infra.logger_config import logger
 
 URL_QUEUE = queue.Queue()
 SEEN_URLS = set()

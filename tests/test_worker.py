@@ -2,7 +2,7 @@ import queue
 import threading
 from unittest.mock import MagicMock
 
-from src import worker
+from src.app import worker
 
 
 def test_descobrir_telefones_sem_links(monkeypatch):

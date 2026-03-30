@@ -3,9 +3,9 @@ import threading
 import time
 import random
 from src.config import logger, URL_QUEUE, LOCK, TELEMETRIA
-from src.network import requisicao, get_crawl_delay
-from src.parser import parsing, encontrar_telefones, extrair_texto
-from src.database import salvar_telefones
+from src.infra.network import requisicao, get_crawl_delay
+from src.domain.parser import parsing, encontrar_telefones, extrair_texto
+from src.infra.database import salvar_telefones
 
 
 def descobrir_telefones(agente, session):
