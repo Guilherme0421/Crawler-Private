@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from src.network import requisicao, converter_https, get_crawl_delay, gerar_headers_realistas
+from src.network import requisicao, converter_https, get_crawl_delay, gerar_headers_realistas, criar_sessao
 from tenacity import RetryError
 
 def test_converter_https():
@@ -14,32 +14,37 @@ def test_gerar_headers_realistas():
     assert 'Accept' in headers
     assert headers['Accept-Language'] == 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
 
-@patch('src.network.requests.get')
-@patch('src.network.time.sleep')  # Mock sleep to avoid waiting
-def test_requisicao_429_retry(mock_sleep, mock_get):
+def test_criar_sessao_aplica_headers():
+    session = criar_sessao({"User-Agent": "test-agent"})
+    assert session.headers["User-Agent"] == "test-agent"
+
+@patch('src.network.requests.Session')
+@patch('src.network.time.sleep')
+def test_requisicao_429_retry(mock_sleep, mock_session_cls):
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 429
-    mock_response.raise_for_status.side_effect = Exception("429 Too Many Requests")
-    mock_get.return_value = mock_response
+    mock_session.get.return_value = mock_response
+    mock_session_cls.return_value = mock_session
 
     with pytest.raises(RetryError):
-        requisicao("http://example.com", {"User-Agent": "test"})
+        requisicao("http://example.com")
 
-    # Verificar se foi chamado múltiplas vezes devido ao retry
-    assert mock_get.call_count > 1
+    assert mock_session.get.call_count > 1
 
-@patch('src.network.requests.get')
+@patch('src.network.requests.Session')
 @patch('src.network.time.sleep')
-def test_requisicao_success(mock_sleep, mock_get):
+def test_requisicao_success(mock_sleep, mock_session_cls):
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = "OK"
-    mock_get.return_value = mock_response
+    mock_session.get.return_value = mock_response
+    mock_session_cls.return_value = mock_session
 
-    result = requisicao("http://example.com", {"User-Agent": "test"})
+    result = requisicao("http://example.com")
     assert result == "OK"
-    # Verificar se verify=True foi passado e URL convertida
-    mock_get.assert_called_with("https://example.com", headers={"User-Agent": "test"}, timeout=10, verify=True)
+    mock_session.get.assert_called_with("https://example.com", timeout=10)
 
 @patch('src.network.RobotFileParser')
 def test_get_crawl_delay(mock_rp):

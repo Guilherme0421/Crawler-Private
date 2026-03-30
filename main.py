@@ -4,7 +4,14 @@ import sys
 import os
 import time
 from src.config import logger, URL_QUEUE, SEEN_URLS, TELEMETRIA
-from src.network import get_random_user_agent, check_robots, requisicao, get_crawl_delay, gerar_headers_realistas
+from src.network import (
+    get_random_user_agent,
+    check_robots,
+    requisicao,
+    get_crawl_delay,
+    gerar_headers_realistas,
+    criar_sessao,
+)
 from src.parser import parsing, encontrar_links
 from src.worker import descobrir_telefones
 
@@ -47,8 +54,8 @@ def obter_crawl_delay(url_alvo, agente):
     return get_crawl_delay(url_alvo, agente)
 
 
-def obter_links_iniciais(url_alvo, headers, agente):
-    html_inicial = requisicao(url_alvo, headers, obter_crawl_delay(url_alvo, agente))
+def obter_links_iniciais(url_alvo, session, agente):
+    html_inicial = requisicao(url_alvo, session, obter_crawl_delay(url_alvo, agente))
     if not html_inicial:
         logger.critical("Falha ao baixar a página inicial. Encerrando!")
         return []
@@ -71,10 +78,14 @@ def enfileirar_links(links):
     return adicionados
 
 
-def iniciar_workers(num_threads, headers):
+def iniciar_workers(num_threads, agente, session):
     threads = []
     for i in range(num_threads):
-        thread = threading.Thread(target=descobrir_telefones, args=(headers,), name=f"Worker - {i + 1}")
+        thread = threading.Thread(
+            target=descobrir_telefones,
+            args=(agente, session),
+            name=f"Worker - {i + 1}",
+        )
         threads.append(thread)
         thread.start()
 
@@ -86,25 +97,29 @@ def executar_crawler(url_alvo, num_threads):
     TELEMETRIA.iniciar()
 
     headers, agente = preparar_headers()
+    session = criar_sessao(headers)
 
-    if not validar_acesso_robots(url_alvo, agente):
-        return 1
+    try:
+        if not validar_acesso_robots(url_alvo, agente):
+            return 1
 
-    novos_links = obter_links_iniciais(url_alvo, headers, agente)
-    adicionados = enfileirar_links(novos_links)
+        novos_links = obter_links_iniciais(url_alvo, session, agente)
+        adicionados = enfileirar_links(novos_links)
 
-    logger.info(f"Seed inicial: {adicionados} links únicos enfileirados para processamento.")
+        logger.info(f"Seed inicial: {adicionados} links únicos enfileirados para processamento.")
 
-    if URL_QUEUE.empty():
-        logger.warning("Nenhum link interno encontrado.")
+        if URL_QUEUE.empty():
+            logger.warning("Nenhum link interno encontrado.")
+            return 0
+
+        iniciar_workers(num_threads, agente, session)
+
+        TELEMETRIA.finalizar()
+        logger.info("Fim da execução. Logs salvos na pasta /logs.")
+        logger.info(TELEMETRIA.relatorio())
         return 0
-
-    iniciar_workers(num_threads, headers)
-
-    TELEMETRIA.finalizar()
-    logger.info("Fim da execução. Logs salvos na pasta /logs.")
-    logger.info(TELEMETRIA.relatorio())
-    return 0
+    finally:
+        session.close()
 
 
 def main():

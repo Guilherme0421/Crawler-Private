@@ -8,7 +8,7 @@ from src.parser import parsing, encontrar_telefones, extrair_texto
 from src.database import salvar_telefones
 
 
-def descobrir_telefones(headers):
+def descobrir_telefones(agente, session):
     thread_name = threading.current_thread().name
     logger.info(f"{thread_name} Iniciando Thread!")
 
@@ -28,8 +28,8 @@ def descobrir_telefones(headers):
 
             logger.info(f"[{thread_name}] Acessando: {link_alvo}")
 
-            crawl_delay = get_crawl_delay(link_alvo, headers.get('User-Agent', '*'))
-            resposta_html = requisicao(link_alvo, headers, crawl_delay)
+            crawl_delay = get_crawl_delay(link_alvo, agente)
+            resposta_html = requisicao(link_alvo, session, crawl_delay)
 
             if resposta_html:
                 with LOCK:
