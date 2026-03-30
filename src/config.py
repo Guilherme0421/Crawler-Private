@@ -1,9 +1,11 @@
 import threading
+import queue
 from datetime import datetime
 
 from src.logger_config import logger
 
-LINKS = []
+URL_QUEUE = queue.Queue()
+SEEN_URLS = set()
 CACHE_TELEFONES = set()
 LOCK = threading.Lock()
 
