@@ -15,14 +15,20 @@ from src.config import logger
     before_sleep=lambda retry_state: logger.warning(f"Tentativa {retry_state.attempt_number} falhou: {retry_state.outcome.exception()}. Tentando novamente em {retry_state.next_action.sleep} segundos.")
 )
 def requisicao(url, headers, crawl_delay=None):
-    # Aplicar delay aleatório se crawl_delay estiver definido
-    if crawl_delay:
-        delay = random.uniform(crawl_delay, 2 * crawl_delay)
-        logger.info(f"Aplicando delay de {delay:.2f} segundos")
-        time.sleep(delay)
+    # Forçar HTTPS
+    url = converter_https(url)
+
+    # Aplicar delay básico se não houver crawl_delay
+    if crawl_delay is None:
+        crawl_delay = random.uniform(1, 3)  # Delay ético entre 1-3 segundos
+
+    delay = random.uniform(crawl_delay, 2 * crawl_delay)
+    logger.info(f"Aplicando delay de {delay:.2f} segundos")
+    time.sleep(delay)
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        # Garantir SSL verification
+        response = requests.get(url, headers=headers, timeout=10, verify=True)
         if response.status_code == 200:
             return response.text
         elif response.status_code == 429:
@@ -37,13 +43,35 @@ def requisicao(url, headers, crawl_delay=None):
         raise
         
 def get_random_user_agent():
-    try:
-        ua = UserAgent(platforms=["desktop"], browsers=["Chrome"])
-        agent = ua.random
-        return agent
-    except Exception as e:
-        logger.critical("Falha ao criar o UserAgent. Encerrando...")
-        sys.exit(0)
+    # Lista de User-Agents modernos para rotação
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ]
+    return random.choice(user_agents)
+
+def gerar_headers_realistas(user_agent=None):
+    if user_agent is None:
+        user_agent = get_random_user_agent()
+    
+    headers = {
+        'User-Agent': user_agent,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Cache-Control': 'max-age=0',
+    }
+    return headers
   
 def filtrar_url(url):
     url_filtered = urlparse(url)
