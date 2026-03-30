@@ -108,6 +108,3 @@ Antes de contribuir, execute os testes e certifique-se de que o código segue as
 ## 📄 Licença
 
 Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-#### Comando para definir a quantidade de threads
-    python main.py --url <URL> --threads <VALOR>
