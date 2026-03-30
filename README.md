@@ -1,4 +1,4 @@
-# 🕷️ PyCrawler - Extrator de números telefonicos v1.1.0
+# 🕷️ PyCrawler - Extrator de números telefonicos v1.1.2
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-orange?style=for-the-badge)
 

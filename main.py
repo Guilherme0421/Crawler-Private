@@ -19,7 +19,7 @@ from src.worker import descobrir_telefones
 def exibir_introducao():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("=" * 60)
-    print("      CRAWLER PROFISSIONAL - SOLUÇÃO DE EXTRAÇÃO v1.1.0")
+    print("      CRAWLER PROFISSIONAL - SOLUÇÃO DE EXTRAÇÃO v1.1.2")
     print("=" * 60)
     print("  Desenvolvido por: Killi")
     print("  Status: Sistema Inicializado...")
