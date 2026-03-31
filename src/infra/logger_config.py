@@ -30,3 +30,22 @@ logger.addHandler(handler)
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+
+
+class DefaultConsoleFilter(logging.Filter):
+    def filter(self, record):
+        message = record.getMessage()
+        keywords = [
+            'Encontrados',
+            'Relatório de Execução',
+            'Fim da execução',
+            'Telefones salvos',
+        ]
+
+        return any(keyword in message for keyword in keywords)
+
+
+def set_console_verbosity(verbose: bool):
+    console_handler.filters = []
+    if not verbose:
+        console_handler.addFilter(DefaultConsoleFilter())

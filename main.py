@@ -1,10 +1,10 @@
-import argparse
 import threading
 import sys
 import os
 import time
 from src.config import logger, URL_QUEUE, SEEN_URLS, TELEMETRIA
 from src.app.cli.argparser import parse_args
+from src.infra.logger_config import set_console_verbosity
 from src.infra.network import (
     get_random_user_agent,
     check_robots,
@@ -127,9 +127,17 @@ def executar_crawler(urls_alvo, num_threads, insecure=False):
         session.close()
 
 
+def informar_inicio_buscas(verbose):
+    if not verbose:
+        print("Iniciando Buscas")
+
+
 def main():
     exibir_introducao()
     args = parse_args()
+
+    set_console_verbosity(args.verbose)
+    informar_inicio_buscas(args.verbose)
 
     logger.info("---- INICIANDO CRAWLER ----")
     logger.info(f"Alvos: {', '.join(args.url)}")

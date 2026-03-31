@@ -31,4 +31,10 @@ def parse_args():
         action="store_true",
         help="Desativa verificação SSL (apenas para testes em ambientes de desenvolvimento).",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Exibe todas as informações de log no console.",
+    )
     return parser.parse_args()

@@ -31,6 +31,23 @@ def test_parse_args_multiple_urls_and_insecure(monkeypatch):
     assert args.url == ['https://example.com', 'https://outroexemplo.com']
     assert args.threads == 4
     assert args.insecure is True
+    assert args.verbose is False
+
+
+def test_verbose_flag_parses_true(monkeypatch):
+    monkeypatch.setattr(
+        sys,
+        'argv',
+        [
+            'main.py',
+            '--url',
+            'https://example.com',
+            '--verbose',
+        ],
+    )
+    args = parse_args()
+
+    assert args.verbose is True
 
 
 def test_help_argument_displays_usage(monkeypatch, capsys):

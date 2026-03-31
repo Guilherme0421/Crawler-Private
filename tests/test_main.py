@@ -1,3 +1,4 @@
+import builtins
 import sys
 from unittest.mock import MagicMock
 
@@ -71,3 +72,21 @@ def test_executar_crawler_com_multiplas_urls(monkeypatch):
     telemetria.iniciar.assert_called_once()
     telemetria.finalizar.assert_called_once()
     session.close.assert_called_once()
+
+
+def test_informar_inicio_buscas_exibe_mensagem_quando_nao_verbose(monkeypatch, capsys):
+    monkeypatch.setattr(builtins, 'print', lambda msg: sys.stdout.write(msg + '\n'))
+
+    main.informar_inicio_buscas(False)
+    captured = capsys.readouterr()
+
+    assert 'Iniciando Buscas' in captured.out
+
+
+def test_informar_inicio_buscas_nao_exibe_mensagem_quando_verbose(monkeypatch, capsys):
+    monkeypatch.setattr(builtins, 'print', lambda msg: sys.stdout.write(msg + '\n'))
+
+    main.informar_inicio_buscas(True)
+    captured = capsys.readouterr()
+
+    assert captured.out == ''
