@@ -51,11 +51,14 @@ Certifique-se de ter o Python instalado (versão 3.9+).
 #### Comando para rodar o programa com uso de threads padrão = 3.
     python main.py --url <URL>
 
+#### Comando para rodar o programa com múltiplas seeds.
+    python main.py --url <URL1> <URL2> <URL3>
+
 #### Comando para rodar o programa com 5 threads.
     python main.py --url <URL> --threads 5
 
 #### Exemplo prático:
-    python main.py --url https://example.com --threads 4
+    python main.py --url https://example.com https://outroexemplo.com --threads 4
 
 ---
 

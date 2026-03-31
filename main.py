@@ -4,6 +4,7 @@ import sys
 import os
 import time
 from src.config import logger, URL_QUEUE, SEEN_URLS, TELEMETRIA
+from src.app.cli.argparser import parse_args
 from src.infra.network import (
     get_random_user_agent,
     check_robots,
@@ -27,18 +28,6 @@ def exibir_introducao():
     print("=" * 60)
     print("\n")
     time.sleep(1)
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Crawler SOC - Extrator de numeros de telefone.")
-    parser.add_argument("--url", required=True, help="URL inicial do site alvo (com http/https)")
-    parser.add_argument("--threads", type=int, default=3, help="Número de threads que serão usadas.")
-    parser.add_argument(
-        "--insecure",
-        action="store_true",
-        help="Desativa verificação SSL (apenas para testes em ambientes de desenvolvimento).",
-    )
-    return parser.parse_args()
 
 
 def preparar_headers():
@@ -98,7 +87,7 @@ def iniciar_workers(num_threads, agente, session):
         thread.join()
 
 
-def executar_crawler(url_alvo, num_threads, insecure=False):
+def executar_crawler(urls_alvo, num_threads, insecure=False):
     TELEMETRIA.iniciar()
 
     headers, agente = preparar_headers()
@@ -108,16 +97,24 @@ def executar_crawler(url_alvo, num_threads, insecure=False):
         logger.warning("Modo inseguro ativado: verificação SSL desabilitada.")
 
     try:
-        if not validar_acesso_robots(url_alvo, agente):
-            return 1
+        total_adicionados = 0
+        for url_alvo in urls_alvo:
+            if not validar_acesso_robots(url_alvo, agente):
+                logger.warning(f"Ignorando {url_alvo} por restrições de robots.txt.")
+                continue
 
-        novos_links = obter_links_iniciais(url_alvo, session, agente)
-        adicionados = enfileirar_links(novos_links)
+            novos_links = obter_links_iniciais(url_alvo, session, agente)
+            adicionados = enfileirar_links(novos_links)
+            total_adicionados += adicionados
+            logger.info(f"Seed inicial [{url_alvo}]: {adicionados} links únicos enfileirados para processamento.")
 
-        logger.info(f"Seed inicial: {adicionados} links únicos enfileirados para processamento.")
+        logger.info(f"Total de links únicos enfileirados a partir das seeds: {total_adicionados}.")
 
         if URL_QUEUE.empty():
-            logger.warning("Nenhum link interno encontrado.")
+            logger.warning("Nenhum link interno encontrado a partir das URLs iniciais.")
+            TELEMETRIA.finalizar()
+            logger.info("Fim da execução. Logs salvos na pasta /logs.")
+            logger.info(TELEMETRIA.relatorio())
             return 0
 
         iniciar_workers(num_threads, agente, session)
@@ -135,7 +132,7 @@ def main():
     args = parse_args()
 
     logger.info("---- INICIANDO CRAWLER ----")
-    logger.info(f"Alvo: {args.url}")
+    logger.info(f"Alvos: {', '.join(args.url)}")
     logger.info(f"Threads: {args.threads}")
     logger.info(f"Verificação SSL: {'desabilitada' if args.insecure else 'ativa'}")
 
