@@ -1,8 +1,10 @@
-# 🕷️ PyCrawler - Extrator de números telefonicos v1.1.2
+# 🕷️ PyCrawler - Extrator de números telefonicos v1.1.3
 ![Python Version](https://img.shields.io/badge/python-3.9%2B-blue?style=for-the-badge&logo=python)
 ![Status](https://img.shields.io/badge/status-em_desenvolvimento-orange?style=for-the-badge)
 
 > Um web crawler focado em extração de dados (telefones) de anúncios classificados, utilizando processamento paralelo para obter melhor eficiência.
+
+> **Versão 1.1.3:** adicionada opção `-v/--verbose` e suporte para mais de uma URL.
 ---
 ## Funcionalidades
 * **⚡ Multi-threading:** Utiliza o módulo `threading` para rodar múltiplos workers simultaneamente, acelerando a coleta de dados.
@@ -66,18 +68,18 @@ Certifique-se de ter o Python instalado (versão 3.9+).
 
 O projeto é estruturado em módulos para facilitar manutenção e extensibilidade:
 
-- **`main.py`**: Ponto de entrada da aplicação. Gerencia argumentos CLI, inicializa telemetria e coordena threads.
-- **`src/config.py`**: Contém configurações globais, como locks para thread-safety e telemetria.
-- **`src/network.py`**: Responsável por requisições HTTP, verificação de robots.txt, rate limiting e retry logic.
-- **`src/parser.py`**: Parsing de HTML, extração de links e telefones usando BeautifulSoup e phonenumbers.
-- **`src/worker.py`**: Lógica dos workers que processam URLs em paralelo.
-- **`src/database.py`**: Persistência de dados extraídos.
-- **`src/logger_config.py`**: Configuração de logging estruturado.
-- **`data/`**: Armazenamento de dados extraídos (JSON).
-- **`logs/`**: Arquivos de log rotativos.
-- **`tests/`**: Testes unitários com Pytest.
+- **`main.py`**: Ponto de entrada da aplicação. Gerencia argumentos CLI, inicializa telemetria, configura o logger e coordena os workers.
+- **`src/config.py`**: Define estado global compartilhado, como `URL_QUEUE`, `SEEN_URLS`, `LOCK` e `TELEMETRIA`.
+- **`src/app/cli/argparser.py`**: Centraliza a definição dos argumentos de linha de comando (`--url`, `--threads`, `--insecure`, `--verbose`).
+- **`src/app/worker.py`**: Implementa a lógica dos workers que consomem a fila de URLs e extraem telefones em paralelo.
+- **`src/domain/parser.py`**: Contém parsing de HTML, extração de links internos, limpezas de texto e extração/normalização de telefones.
+- **`src/infra/network.py`**: Responsável por requisições HTTP, verificação de `robots.txt`, controle de crawl-delay, sessões e cabeçalhos realistas.
+- **`src/infra/logger_config.py`**: Configura logs em arquivo e console, incluindo o modo silencioso padrão e o modo `-v/--verbose`.
+- **`src/infra/database.py`**: Grava resultados extraídos em JSON e garante persistência segura.
+- **`logs/`**: Armazena arquivos de log rotativos gerados durante a execução.
+- **`tests/`**: Contém testes unitários para validar parsing, rede, CLI e comportamento do crawler.
 
-A comunicação entre módulos ocorre via imports e compartilhamento de estruturas de dados thread-safe (como listas e locks).
+A comunicação entre módulos ocorre via imports e compartilhamento de estruturas de dados thread-safe, com processamento paralelo coordenado pelo `main.py` e `src/app/worker.py`.
 
 ---
 
