@@ -66,3 +66,29 @@ def test_descobrir_telefones_falha_incrementa_falhas(monkeypatch):
     assert telemetria.sucessos == 0
     assert telemetria.falhas == 1
     assert telemetria.telefones_encontrados == 0
+
+
+def test_descobrir_telefones_trata_excecao_requisicao_e_continua(monkeypatch):
+    fila = queue.Queue()
+    fila.put('https://example.com/anuncio')
+    monkeypatch.setattr(worker, 'URL_QUEUE', fila)
+    monkeypatch.setattr(worker, 'LOCK', threading.Lock())
+    monkeypatch.setattr(worker, 'time', MagicMock(sleep=lambda *_: None))
+    monkeypatch.setattr(worker, 'random', MagicMock(uniform=lambda *_: 0))
+
+    telemetria = MagicMock(urls_processadas=0, sucessos=0, falhas=0, telefones_encontrados=0)
+    monkeypatch.setattr(worker, 'TELEMETRIA', telemetria)
+    monkeypatch.setattr(worker, 'get_crawl_delay', lambda url, agente: None)
+
+    def raise_request_error(url, session, delay):
+        raise Exception('HTTP 404: https://example.com/anuncio')
+
+    monkeypatch.setattr(worker, 'requisicao', raise_request_error)
+
+    session = MagicMock()
+    worker.descobrir_telefones('agent', session)
+
+    assert telemetria.urls_processadas == 1
+    assert telemetria.sucessos == 0
+    assert telemetria.falhas == 1
+    assert telemetria.telefones_encontrados == 0

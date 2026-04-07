@@ -13,10 +13,11 @@ def test_default_console_filter_allows_found_info():
         level=logging.INFO,
         pathname=__file__,
         lineno=1,
-        msg='[Worker] Encontrados 2 telefone(s) em https://example.com',
+        msg='https://example.com: +5511999999999',
         args=(),
         exc_info=None,
     )
+    found_record.phone_output = True
     assert filters[0].filter(found_record) is True
 
     other_record = logging.LogRecord(
@@ -30,7 +31,35 @@ def test_default_console_filter_allows_found_info():
     )
     assert filters[0].filter(other_record) is False
 
+    save_record = logging.LogRecord(
+        name='SOC_Crawler',
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg='Telefones salvos com sucesso em data/telefones_extraidos.json. Adicionados: 2',
+        args=(),
+        exc_info=None,
+    )
+    assert filters[0].filter(save_record) is False
+
 
 def test_verbose_console_removes_filter():
     logger_config.set_console_verbosity(True)
     assert logger_config.console_handler.filters == []
+
+
+def test_console_formatter_plain_message_when_not_verbose():
+    logger_config.set_console_verbosity(False)
+    record = logging.LogRecord(
+        name='SOC_Crawler',
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg='https://example.com: +5511999999999',
+        args=(),
+        exc_info=None,
+    )
+    record.phone_output = True
+    formatted = logger_config.console_handler.format(record)
+
+    assert formatted == 'https://example.com: +5511999999999'

@@ -14,11 +14,13 @@ log_filename = datetime.now().strftime('logs/crawler_%Y-%m-%d.log')
 handler = RotatingFileHandler(
     log_filename,
     maxBytes=5 * 1024 * 1024,  # 5MB
-    backupCount=5
+    backupCount=5,
+    encoding='utf-8'
 )
 
 # Formatação: [Timestamp] [Level] [Módulo] - Mensagem
 formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s')
+console_formatter = logging.Formatter('%(message)s')
 handler.setFormatter(formatter)
 
 # Configurar logger
@@ -28,18 +30,19 @@ logger.addHandler(handler)
 
 # Adicionar handler para console também
 console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
+console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
 
 class DefaultConsoleFilter(logging.Filter):
     def filter(self, record):
+        if getattr(record, 'phone_output', False):
+            return True
+
         message = record.getMessage()
         keywords = [
-            'Encontrados',
             'Relatório de Execução',
             'Fim da execução',
-            'Telefones salvos',
         ]
 
         return any(keyword in message for keyword in keywords)
@@ -47,5 +50,8 @@ class DefaultConsoleFilter(logging.Filter):
 
 def set_console_verbosity(verbose: bool):
     console_handler.filters = []
-    if not verbose:
+    if verbose:
+        console_handler.setFormatter(formatter)
+    else:
+        console_handler.setFormatter(console_formatter)
         console_handler.addFilter(DefaultConsoleFilter())

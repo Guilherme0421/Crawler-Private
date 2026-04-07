@@ -41,7 +41,10 @@ def descobrir_telefones(agente, session):
                     telefones = encontrar_telefones(texto_anuncio)
 
                     if telefones:
-                        logger.info(f"[{thread_name}] Encontrados {len(telefones)} telefone(s) em {link_alvo}")
+                        logger.info(
+                            f"{link_alvo}: {', '.join(telefones)}",
+                            extra={"phone_output": True},
+                        )
                         salvar_telefones(telefones, link_alvo)
                         with LOCK:
                             TELEMETRIA.telefones_encontrados += len(telefones)
@@ -51,6 +54,10 @@ def descobrir_telefones(agente, session):
                 with LOCK:
                     TELEMETRIA.falhas += 1
                 logger.warning(f"[{thread_name}] Falha ao acessar: {link_alvo}")
+        except Exception as err:
+            with LOCK:
+                TELEMETRIA.falhas += 1
+            logger.error(f"[{thread_name}] Erro ao processar {link_alvo}: {err}")
         finally:
             URL_QUEUE.task_done()
             

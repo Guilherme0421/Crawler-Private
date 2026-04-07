@@ -32,16 +32,20 @@ def salvar_telefones(telefones_novos, url_origem):
     # Adicionar novos telefones
     timestamp = datetime.now().isoformat()
     novos_dados = []
+    existentes_por_telefone = {d['telefone'] for d in dados_existentes}
+
     for telefone in telefones_novos:
+        if telefone in existentes_por_telefone:
+            continue
+
         entrada = {
             "telefone": telefone,
             "url_origem": url_origem,
             "data_coleta": timestamp
         }
-        # Verificar duplicata: mesmo telefone e mesma url
-        if not any(d['telefone'] == telefone and d['url_origem'] == url_origem for d in dados_existentes):
-            novos_dados.append(entrada)
-            dados_existentes.append(entrada)
+        novos_dados.append(entrada)
+        dados_existentes.append(entrada)
+        existentes_por_telefone.add(telefone)
     
     # Salvar arquivo atualizado
     try:

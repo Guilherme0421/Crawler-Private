@@ -90,3 +90,30 @@ def test_informar_inicio_buscas_nao_exibe_mensagem_quando_verbose(monkeypatch, c
     captured = capsys.readouterr()
 
     assert captured.out == ''
+
+
+def test_executar_crawler_nao_exibe_total_quando_todos_os_seeds_sao_bloqueados(monkeypatch):
+    session = MagicMock()
+    telemetria = MagicMock()
+    telemetria.iniciar = MagicMock()
+    telemetria.finalizar = MagicMock()
+    telemetria.relatorio = MagicMock(return_value='relatorio')
+
+    fake_logger = MagicMock()
+    monkeypatch.setattr(main, 'logger', fake_logger)
+    monkeypatch.setattr(main, 'TELEMETRIA', telemetria)
+    monkeypatch.setattr(main, 'preparar_headers', lambda: ({}, 'agent'))
+    monkeypatch.setattr(main, 'criar_sessao', lambda headers, verify=True: session)
+    monkeypatch.setattr(main, 'validar_acesso_robots', lambda url, agente: False)
+    monkeypatch.setattr(main, 'obter_links_iniciais', lambda url, session_obj, agente: ['https://example.com/link1'])
+    monkeypatch.setattr(main, 'enfileirar_links', lambda links: len(links))
+    monkeypatch.setattr(main, 'iniciar_workers', lambda num_threads, agente, sess: None)
+
+    exit_code = main.executar_crawler(['https://bloqueado.example.com'], 2, insecure=False)
+
+    assert exit_code == 0
+    fake_logger.info.assert_any_call('Fim da execução. Logs salvos na pasta /logs.')
+    fake_logger.info.assert_any_call('relatorio')
+    assert not any('Total de links únicos enfileirados a partir das seeds:' in args[0] for args in fake_logger.info.call_args_list)
+    assert fake_logger.warning.assert_any_call('Nenhum dos alvos pôde ser processado porque todos foram negados pelo robots.txt.')
+    session.close.assert_called_once()

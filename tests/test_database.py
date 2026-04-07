@@ -27,6 +27,16 @@ def test_salvar_telefones_nao_duplica_telefone(tmp_path, monkeypatch):
     assert len(registros) == 1
 
 
+def test_salvar_telefones_nao_duplica_telefone_em_urls_diferentes(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    salvar_telefones(["+5511999999999"], "https://site1.com")
+    salvar_telefones(["+5511999999999"], "https://site2.com")
+
+    data_file = tmp_path / 'data' / 'telefones_extraidos.json'
+    registros = json.loads(data_file.read_text(encoding='utf-8'))
+    assert len(registros) == 1
+
+
 def test_salvar_telefones_reinicia_arquivo_corrompido(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     data_dir = tmp_path / 'data'

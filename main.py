@@ -37,7 +37,7 @@ def preparar_headers():
 
 def validar_acesso_robots(url_alvo, agente):
     if not check_robots(url_alvo, agente):
-        logger.error("🔴 Acesso negado pelo robots.txt. Encerrando operação!")
+        logger.error("Acesso negado pelo robots.txt. Encerrando operação!")
         return False
 
     logger.info("Permissão concedida pelo robots.txt")
@@ -98,15 +98,24 @@ def executar_crawler(urls_alvo, num_threads, insecure=False):
 
     try:
         total_adicionados = 0
+        seeds_processados = 0
         for url_alvo in urls_alvo:
             if not validar_acesso_robots(url_alvo, agente):
                 logger.warning(f"Ignorando {url_alvo} por restrições de robots.txt.")
                 continue
 
+            seeds_processados += 1
             novos_links = obter_links_iniciais(url_alvo, session, agente)
             adicionados = enfileirar_links(novos_links)
             total_adicionados += adicionados
             logger.info(f"Seed inicial [{url_alvo}]: {adicionados} links únicos enfileirados para processamento.")
+
+        if seeds_processados == 0:
+            logger.warning("Nenhum dos alvos pôde ser processado porque todos foram negados pelo robots.txt.")
+            TELEMETRIA.finalizar()
+            logger.info("Fim da execução. Logs salvos na pasta /logs.")
+            logger.info(TELEMETRIA.relatorio())
+            return 0
 
         logger.info(f"Total de links únicos enfileirados a partir das seeds: {total_adicionados}.")
 
