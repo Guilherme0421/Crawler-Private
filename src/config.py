@@ -40,6 +40,3 @@ Relatório de Execução:
         return rel
 
 TELEMETRIA = Telemetria()
-
-
-# urlAutomoveis = "https://django-anuncios.solyd.com.br/automoveis/"  
